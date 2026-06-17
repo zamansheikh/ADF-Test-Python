@@ -9,8 +9,17 @@ results can be compared and the better dataset chosen.
 
 ```bash
 pip install pandas statsmodels openpyxl
-python adf_regression.py
+python adf_regression.py      # ADF + OLS (this file)
+python cointegration_ecm.py   # log + Cointegration + ECM (proper fix, see note below)
 ```
+
+> **⭐ Proper econometric result (recommended reading):** GDP & Gross Capital Formation
+> stay Non-Stationary even after a 2nd difference, so plain differencing is not the right
+> fix. After a **log transform** both become I(1), an **Engle-Granger cointegration test**
+> confirms a genuine long-run relationship (p = 0.016 — *not spurious*), and an **ECM** gives
+> a valid error-correction term (−0.52, p = 0.006). **Use Dataset 1.** Full write-up:
+> [`Cointegration_ECM_English.md`](Cointegration_ECM_English.md) /
+> [`Cointegration_ECM_Bangla.md`](Cointegration_ECM_Bangla.md).
 
 ## Method
 
