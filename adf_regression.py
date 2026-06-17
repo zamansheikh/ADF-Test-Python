@@ -4,7 +4,8 @@ ADF Stationarity Test + OLS Regression
 Workflow (per dataset):
  1. Run the Augmented Dickey-Fuller (ADF) test on every variable at LEVEL.
  2. If a series is Non-Stationary (ADF p-value >= 0.05) -> take the First Difference
-    and re-test, so every series used in the model is Stationary.
+    and re-test. If it is STILL Non-Stationary -> take the Second Difference and
+    re-test, so every series used in the model is Stationary.
  3. Run OLS regression with GDP as the Dependent Variable and the rest as
     Independent Variables (using the stationary version of each series).
  4. Do this for BOTH datasets and compare the results.
@@ -27,7 +28,8 @@ def adf_pvalue(series):
 
 def make_stationary(df, cols):
     """
-    For each column: ADF at level. If non-stationary, take 1st difference.
+    For each column: ADF at level. If non-stationary -> 1st difference.
+    If still non-stationary -> 2nd difference. Re-test at each step.
     Returns (stationary_df, report_rows).
     """
     out = {}
@@ -36,15 +38,26 @@ def make_stationary(df, cols):
         p_level = adf_pvalue(df[c])
         if p_level < SIG:
             out[c] = df[c]
-            report.append([c, round(p_level, 4), "Stationary", "Level (I(0))", "-"])
-        else:
-            diff = df[c].diff()
-            p_diff = adf_pvalue(diff)
-            out[c] = diff
-            status = "Stationary" if p_diff < SIG else "STILL Non-Stationary"
-            report.append([c, round(p_level, 4),
-                           "Non-Stationary -> diff", "1st Diff (I(1))",
-                           f"{round(p_diff,4)} ({status})"])
+            report.append([c, round(p_level, 4), "-", "-",
+                           "Stationary", "Level (I(0))"])
+            continue
+
+        # First difference
+        d1 = df[c].diff()
+        p_d1 = adf_pvalue(d1)
+        if p_d1 < SIG:
+            out[c] = d1
+            report.append([c, round(p_level, 4), round(p_d1, 4), "-",
+                           "Stationary", "1st Diff (I(1))"])
+            continue
+
+        # Second difference
+        d2 = df[c].diff().diff()
+        p_d2 = adf_pvalue(d2)
+        out[c] = d2
+        status = "Stationary" if p_d2 < SIG else "STILL Non-Stationary"
+        report.append([c, round(p_level, 4), round(p_d1, 4), round(p_d2, 4),
+                       status, "2nd Diff (I(2))"])
     return pd.DataFrame(out), report
 
 
@@ -60,7 +73,8 @@ def analyse(path, dep_col, name):
     # ---- Step 1 & 2: ADF + first difference where needed ----
     stat_df, report = make_stationary(df, vars_)
     rep = pd.DataFrame(report, columns=[
-        "Variable", "ADF p (level)", "Decision", "Used as", "ADF p (after diff)"])
+        "Variable", "ADF p (level)", "ADF p (1st diff)", "ADF p (2nd diff)",
+        "Final status", "Used as"])
     print("\n[ ADF TEST RESULTS ]  (H0 = unit root / Non-Stationary; reject if p < 0.05)\n")
     print(rep.to_string(index=False))
 

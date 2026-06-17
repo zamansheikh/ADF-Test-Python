@@ -10,7 +10,8 @@
       "Bash(python -c \"import statsmodels, openpyxl; print\\('both ok'\\)\")",
       "Bash(python -c \"import statsmodels, openpyxl\")",
       "Bash(python -c \"import statsmodels; print\\('statsmodels', statsmodels.__version__\\)\")",
-      "Bash(python adf_regression.py)"
+      "Bash(python adf_regression.py)",
+      "Bash(python cointegration_ecm.py)"
     ]
   }
 }
